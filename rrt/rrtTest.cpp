@@ -8,6 +8,7 @@ using std::cin;
 using std::cout;
 using std::cerr;
 using std::endl;
+
 namespace myrrt{
 RRT::RRT(){}
 RRT::~RRT(){}
@@ -29,19 +30,19 @@ double RRT::distance(point p1, point p2) {return sqrt((p1.x - p2.x)*(p1.x - p2.x
 double RRT::myrand() {return (double)random(100) / 100;}
 int RRT::random(int x){return rand()%x;}
 
-void RRT::get_rrt(double pone[], double ptwo[], double pthree[], double pfour[],int mycounter) {
-	mycounter = this->rrt_count;
-	pone = (double*)malloc(mycounter * sizeof(double));
-	ptwo = (double*)malloc(mycounter * sizeof(double));
-	pthree = (double*)malloc(mycounter * sizeof(double));
-	pfour = (double*)malloc(mycounter * sizeof(double));
+int RRT::get_rrt(double pone[], double ptwo[], double pthree[], double pfour[]) {
+	int mycounter = this->rrt_count;
+	//pone = (double*)malloc(mycounter * sizeof(double));
+	//ptwo = (double*)malloc(mycounter * sizeof(double));
+	//pthree = (double*)malloc(mycounter * sizeof(double));
+	//pfour = (double*)malloc(mycounter * sizeof(double));
 	for (int i = 0; i < mycounter; i++) {
 		pone[i] = this->p1[i];
 		ptwo[i] = this->p2[i];
 		pthree[i] = this->p3[i];
 		pfour[i] = this->p4[i];
-
 	}
+	return mycounter;
 }
 
 void RRT::get_rrt_time(double leng_time[], double theta_time[]) {
@@ -64,8 +65,8 @@ void RRT::get_rrt_time(double leng_time[], double theta_time[]) {
 		theta1[i] = theta[this->pathlength - 2 - i];
 	}
 
-	leng_time = (double*)malloc((this->pathlength - 1) * sizeof(double));
-	theta_time = (double*)malloc((this->pathlength - 2) * sizeof(double));
+	//leng_time = (double*)malloc((this->pathlength - 1) * sizeof(double));
+	//theta_time = (double*)malloc((this->pathlength - 2) * sizeof(double));
 	for (int i = 0; i < this->pathlength - 1; i++) {
 		leng_time[i] = length1[i] / 50;
 	}
@@ -76,19 +77,16 @@ void RRT::get_rrt_time(double leng_time[], double theta_time[]) {
 }
 
 void RRT::get_rrt_length(double leng[]) {
-	leng = (double*)malloc((this->pathlength - 1) * sizeof(double));
 	double* length = (double*)malloc((this->pathlength - 1) * sizeof(double));
 	for (int i = 0; i < this->pathlength - 1; i++) {
 		length[i] = sqrt((this->path[2 * i] - this->path[2 * i + 2])*(this->path[2 * i] - this->path[2 * i + 2]) + (this->path[2 * i + 1] - this->path[2 * i + 3])*(this->path[2 * i + 1] - this->path[2 * i + 3]));
 	}
 	for (int i = 0; i < this->pathlength - 1; i++) {
 		leng[i] = length[this->pathlength - 2 - i];
-	}
-	
+	}	
 }
 void RRT::get_rrt_theta(double theta[]) {
 	double* mytheta = (double*)malloc((this->pathlength - 1) * sizeof(double));
-	theta = (double*)malloc((this->pathlength - 1) * sizeof(double));
 	for (int i = 0; i < this->pathlength - 1; i++) {
 		mytheta[i] = atan2((this->path[2 * i + 1] - this->path[2 * i + 3]), (this->path[2 * i] - this->path[2 * i + 2]));
 	}
@@ -122,7 +120,7 @@ bool RRT::checkPath(point n, point newPos, double x[], double y[]) {
 	return feasible;
 }
 
-double*  RRT::FindPath() {
+double*  RRT::FindPath(double the_path[]) {
 	double*ptr1 = (double*)malloc(1000 * sizeof(double));
 	double*ptr2 = (double*)malloc(1000 * sizeof(double));
 	double*ptr3 = (double*)malloc(1000 * sizeof(double));
@@ -337,9 +335,11 @@ double*  RRT::FindPath() {
 	for (int i = 0; i < 2 * num; i++) {
 		if (i % 2 == 0) {
 			points[i] = pt2->p.x;
+			the_path[i] = points[i];
 		}
 		if (i % 2 == 1) {
 			points[i] = pt2->p.y;
+			the_path[i] = points[i]; 
 			pt2++;
 		}
 	}

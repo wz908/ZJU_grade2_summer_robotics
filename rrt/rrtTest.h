@@ -1,4 +1,7 @@
-﻿#include <iostream>
+﻿#ifndef rrtTest_H
+#define rrtTest_H
+
+#include <iostream>
 #include <time.h>
 //#include "vision_detection.pb.h"
 
@@ -28,8 +31,8 @@ namespace myrrt{
 			bool checkPath(point n, point newPos, double x[], double y[]);
 			double myrand();
 			int random(int x);
-			double* FindPath();
-			void get_rrt(double pone[], double ptwo[], double pthree[], double pfour[], int mycounter);
+			double* FindPath(double the_path[]);
+			int get_rrt(double pone[], double ptwo[], double pthree[], double pfour[]);
 			void get_rrt_time(double leng_time[],double theta_time[]);
 			void get_rrt_length(double leng[]);
 			void get_rrt_theta(double theta[]);
@@ -57,3 +60,4 @@ namespace myrrt{
 			double*p1, *p2, *p3, *p4;
     };
 }
+#endif
