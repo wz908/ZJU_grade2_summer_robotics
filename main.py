@@ -1,5 +1,10 @@
 import numpy as np
-
+try:
+    from protobuf_shader.Dbg import Dbg
+    from protobuf_shader.Rcv import Rcv     
+    from rrt.rrt import PyRRT   
+except ImportError:
+    raise
 #    get the image and parse it whenever the object is created by its port and ip
 #    .e.g 
 # receive from the port
@@ -7,10 +12,6 @@ import numpy as np
     #rcv = Rcv(rcvport,ip)
 #    rcv.ball.x to get the x of ball
 #    rcv.robot_yellow[1].x to get the yellow robot's x with its robot_id=1
-#try:
-#    from protobuf_shader.Rcv import Rcv     
-#except ImportError:
-#    raise
 
 #create a command and send it 
 #.e.g
@@ -20,21 +21,12 @@ import numpy as np
     #print(cmd.robots_command) #Debug info
     #cmd.sendcommands()
 #try:
-#    from Cmd import Cmd
+#    from protobuf_shader.Cmd import Cmd
 #except ImportError:
 #    raise
 
 # create a debug list and send it
 
-try:
-    from protobuf_shader.Dbg import Dbg
-except ImportError:
-    raise
-
-#try:
-#    from rrt.rrt import PyRRT    
-#except ImportError:
-#    raise
 
 def getLocation(rcv):
     location = np.arange(30,dtype=np.float64)
@@ -66,7 +58,7 @@ def rrtInit(rcv):
     rrt_obj = PyRRT(startpointx,startpointy,goalpointx,goalpointy,_locationList,stepsize,disTh,maxAttempts)
     return rrt_obj
 
-def getPath(MAXPOINT):
+def getTestPath(MAXPOINT):
     path = np.ones(MAXPOINT, dtype=np.float64 ) * np.NaN
     path[0]=200
     path[1]=200
@@ -77,6 +69,12 @@ def getPath(MAXPOINT):
     path[6]=-200
     path[7]=-200
     print(path)
+    return path
+
+def getPath(MAXPOINT,rcv):
+    path = np.ones(MAXPOINT, dtype=np.float64 ) * np.NaN    
+    rrt_obj = rrtInit(rcv)
+    rrt_obj.get_path(path)
     return path
 
 def drawpath(dbg,path):
@@ -101,17 +99,16 @@ def main():
     ip = "127.0.0.1"    
     MAXPOINT = 100
 # receive from the port
-    #rcvport = 23333
-    #rcv = Rcv(rcvport,ip)
-    #_locationList = getLocation(rcv)
+    rcvport = 23333
+    rcv = Rcv(rcvport,ip)
+    _locationList = getLocation(rcv)
     #print(_locationList)
     #print(rcv.robots_yellow[1].x) #Debug info 
     #print(type(rcv.robots_yellow))
 
 # get the path
-    path=getPath(MAXPOINT)
-    #rrt_obj = rrtInit(rcv)
-    #rrt_obj.get_path(path)
+    #path=getTestPath(MAXPOINT)
+    path=getPath(MAXPOINT,rcv)
     #print(path)
     
 
@@ -126,7 +123,6 @@ def main():
 # draw some debugs
     dbgport = 20001
     dbg = Dbg(dbgport,ip)
-
     drawpath(dbg,path)
 
 

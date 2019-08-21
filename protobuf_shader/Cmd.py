@@ -1,6 +1,6 @@
 import sys  
 import socket
-import zss_cmd_pb2
+import protobuf_shader.zss_cmd_pb2 as zss_cmd_pb2
 
 class Cmd:
     def __init__(self,port,ip):
