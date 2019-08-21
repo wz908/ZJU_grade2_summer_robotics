@@ -1,5 +1,5 @@
 import sys  
-import zss_debug_pb2 as debug
+import protobuf_shader.zss_debug_pb2 as debug
 import socket
 
 class Dbg:

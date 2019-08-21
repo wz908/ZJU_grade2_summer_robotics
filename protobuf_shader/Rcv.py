@@ -1,6 +1,6 @@
 import sys
 import socket
-import vision_detection_pb2
+import protobuf_shader.vision_detection_pb2 as vd
 
 class Rcv:
     def __init__(self,port,ip):
@@ -22,7 +22,7 @@ class Rcv:
     
     # Analyse the data
     def parseWithProto(self):
-        detection_proto = vision_detection_pb2.Vision_DetectionFrame()
+        detection_proto = vd.Vision_DetectionFrame()
         detection_proto.ParseFromString(self.data)
         self.ball = detection_proto.balls 
         #print(ball.x) //Degub info
