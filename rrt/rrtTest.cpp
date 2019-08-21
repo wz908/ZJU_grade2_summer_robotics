@@ -11,7 +11,7 @@ using std::endl;
 namespace myrrt{
 RRT::RRT(){}
 RRT::~RRT(){}
-RRT::RRT(double startpointx, double startpointy, double goalpointx,double goalpointy, double _locationList[],double stepsize,double disTh,int attempts )
+RRT::RRT(double startpointx, double startpointy, double goalpointx,double goalpointy, double* _locationList,double stepsize,double disTh,int attempts, int radius)
 {
 	this->startpoint.x = startpointx;
 	this->startpoint.y = startpointy;
@@ -21,6 +21,7 @@ RRT::RRT(double startpointx, double startpointy, double goalpointx,double goalpo
 	this->stepsize = stepsize;
 	this->disTh = disTh;
 	this->maxFailedAttempts = attempts;
+	this->radius = radius;
 	cout<<"the class is initialized"<<endl;
 }
 
@@ -28,10 +29,78 @@ double RRT::distance(point p1, point p2) {return sqrt((p1.x - p2.x)*(p1.x - p2.x
 double RRT::myrand() {return (double)random(100) / 100;}
 int RRT::random(int x){return rand()%x;}
 
+void RRT::get_rrt(double pone[], double ptwo[], double pthree[], double pfour[],int mycounter) {
+	mycounter = this->rrt_count;
+	pone = (double*)malloc(mycounter * sizeof(double));
+	ptwo = (double*)malloc(mycounter * sizeof(double));
+	pthree = (double*)malloc(mycounter * sizeof(double));
+	pfour = (double*)malloc(mycounter * sizeof(double));
+	for (int i = 0; i < mycounter; i++) {
+		pone[i] = this->p1[i];
+		ptwo[i] = this->p2[i];
+		pthree[i] = this->p3[i];
+		pfour[i] = this->p4[i];
+
+	}
+}
+
+void RRT::get_rrt_time(double leng_time[], double theta_time[]) {
+
+	double* length = (double*)malloc((this->pathlength - 1) * sizeof(double));
+	double* length1 = (double*)malloc((this->pathlength - 1) * sizeof(double));
+	for (int i = 0; i < this->pathlength - 1; i++) {
+		length[i] = sqrt((this->path[2 * i] - this->path[2 * i + 2])*(this->path[2 * i] - this->path[2 * i + 2]) + (this->path[2 * i + 1] - this->path[2 * i + 3])*(this->path[2 * i + 1] - this->path[2 * i + 3]));
+	}
+	for (int i = 0; i < this->pathlength - 1; i++) {
+		length1[i] = length[this->pathlength - 2 - i];
+	}
+
+	double* theta = (double*)malloc((this->pathlength - 1) * sizeof(double));
+	double* theta1 = (double*)malloc((this->pathlength - 1) * sizeof(double));
+	for (int i = 0; i < this->pathlength - 1; i++) {
+		theta[i] = atan2((this->path[2 * i + 1] - this->path[2 * i + 3]), (this->path[2 * i] - this->path[2 * i + 2]));
+	}
+	for (int i = 0; i < this->pathlength - 1; i++) {
+		theta1[i] = theta[this->pathlength - 2 - i];
+	}
+
+	leng_time = (double*)malloc((this->pathlength - 1) * sizeof(double));
+	theta_time = (double*)malloc((this->pathlength - 2) * sizeof(double));
+	for (int i = 0; i < this->pathlength - 1; i++) {
+		leng_time[i] = length1[i] / 50;
+	}
+
+	for (int i = 0; i < this->pathlength - 2; i++) {
+		theta_time[i] = (theta1[i + 1] - theta1[i]) / 0.1;
+	}
+}
+
+void RRT::get_rrt_length(double leng[]) {
+	leng = (double*)malloc((this->pathlength - 1) * sizeof(double));
+	double* length = (double*)malloc((this->pathlength - 1) * sizeof(double));
+	for (int i = 0; i < this->pathlength - 1; i++) {
+		length[i] = sqrt((this->path[2 * i] - this->path[2 * i + 2])*(this->path[2 * i] - this->path[2 * i + 2]) + (this->path[2 * i + 1] - this->path[2 * i + 3])*(this->path[2 * i + 1] - this->path[2 * i + 3]));
+	}
+	for (int i = 0; i < this->pathlength - 1; i++) {
+		leng[i] = length[this->pathlength - 2 - i];
+	}
+	
+}
+void RRT::get_rrt_theta(double theta[]) {
+	double* mytheta = (double*)malloc((this->pathlength - 1) * sizeof(double));
+	theta = (double*)malloc((this->pathlength - 1) * sizeof(double));
+	for (int i = 0; i < this->pathlength - 1; i++) {
+		mytheta[i] = atan2((this->path[2 * i + 1] - this->path[2 * i + 3]), (this->path[2 * i] - this->path[2 * i + 2]));
+	}
+	for (int i = 0; i < this->pathlength - 1; i++) {
+		theta[i] = mytheta[this->pathlength - 2 - i];
+	}
+}
+
 bool RRT::is_feasible(point p, double x[], double y[]) {
 	bool feasible = true;
 	for (int i = 0; i < 15; i++) {
-		if ((p.x - x[i])*(p.x - x[i]) + (p.y - y[i]) *(p.y - y[i]) <= 400) {
+		if ((p.x - x[i])*(p.x - x[i]) + (p.y - y[i]) *(p.y - y[i]) <= this->radius) {
 			feasible = false;
 		}
 	}
@@ -53,7 +122,12 @@ bool RRT::checkPath(point n, point newPos, double x[], double y[]) {
 	return feasible;
 }
 
-double*  RRT::FindPath(double the_path[]) {
+double*  RRT::FindPath() {
+	double*ptr1 = (double*)malloc(1000 * sizeof(double));
+	double*ptr2 = (double*)malloc(1000 * sizeof(double));
+	double*ptr3 = (double*)malloc(1000 * sizeof(double));
+	double*ptr4 = (double*)malloc(1000 * sizeof(double));
+	int s1 = 0, s2 = 0, s3 = 0, s4 = 0;
 	srand((int)time(NULL));
 	point closestNode;
 	vector<node> rrt;
@@ -184,30 +258,50 @@ double*  RRT::FindPath(double the_path[]) {
 			failedAttempts = failedAttempts + 1;
 			continue;
 		}
-
+		
 		newNode.p = newPoint;
 		newNode.prev = min_index;
 		rrt.push_back(newNode);
 		failedAttempts = 0;
 		if (display) {
 			//cout << "(" << closestNode.x << "," << closestNode.y << ")" << "(" << newPoint.x << "," << newPoint.y << ")" << endl;
+			ptr1[s1++] = closestNode.x;
+			ptr2[s2++] = closestNode.y;
+			ptr3[s3++] = newPoint.x;
+			ptr4[s4++] = newPoint.y;
 			counter++;
 		}
 	}
 	if (display&&pathFound) {
 			//cout << "(" << closestNode.x << "," << closestNode.y << ")" << "(" << goal.x << "," << goal.y << ")" << endl;
+		ptr1[s1++] = closestNode.x;
+		ptr2[s2++] = closestNode.y;
+		ptr3[s3++] = goalpoint.x;
+		ptr4[s4++] = goalpoint.y;
+		ptr1[s1++] = 1000;
+		ptr2[s2++] = 1000;
+		ptr3[s3++] = 1000;
+		ptr4[s4++] = 1000;
 		counter++;
 	}
 	if (!pathFound) {
 		cout << "no path found. maximum attempts reached" << endl;
 	}
-
 	vector<node>::iterator pt1 = rrt.begin();
 	int length = 0;
 	for (; pt1 != rrt.end(); pt1++) {
 		length++;
+		
 	}
-
+//	this->length = length*2;
+/*	double* ptr = (double*)malloc(2*length * sizeof(double));
+	pt1 = rrt.begin();
+	for (int i = 0; i < length*2; i++) {
+		ptr[i] = pt1->p.x;
+		i++;
+		ptr[i] = pt1->p.y;
+		pt1++;
+	}*/
 	vector<node>rrt1, rrt2;
 	rrt1.push_back(rrt[length - 1]);
 	rrt2.push_back(rrt[length - 1]);
@@ -243,14 +337,19 @@ double*  RRT::FindPath(double the_path[]) {
 	for (int i = 0; i < 2 * num; i++) {
 		if (i % 2 == 0) {
 			points[i] = pt2->p.x;
-			the_path[i] = points[i];
 		}
 		if (i % 2 == 1) {
 			points[i] = pt2->p.y;
-			the_path[i] = points[i];
 			pt2++;
 		}
 	}
+	pathlength = num;
+	this->path = points;
+	this->p1 = ptr1;
+	this->p2 = ptr2;
+	this->p3 = ptr3;
+	this->p4 = ptr4;
+	this->rrt_count = counter;
 	return points;
 }
 
