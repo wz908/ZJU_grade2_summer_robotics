@@ -47,7 +47,7 @@ class Dbg:
         linemsg.line.end.y = point2.y
         linemsg.line.FORWARD = ori
         linemsg.line.BACK = not ori
-
+    
 
 ###TODO
     def drawPolygon(self, pointList,color=6,fill=1):
@@ -87,3 +87,6 @@ class Dbg:
         client = socket.socket(type=socket.SOCK_DGRAM)
         client.sendto(send_data,(self.ip,self.port))
         client.close()
+
+    def newmsgs(self):
+        self.msglist = debug.Debug_Msgs()

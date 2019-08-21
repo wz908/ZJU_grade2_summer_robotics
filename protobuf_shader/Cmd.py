@@ -9,7 +9,7 @@ class Cmd:
         self.port=port
         self.ip = ip
         
-    def addcommand(self,index=1, vx=1.5, vy=1.5, omega=7, kick=0,power=60,spin=0,delay=3):
+    def addcommand(self,index=0, vx=50, vy=0, omega=0.1, kick=0,power=60,spin=0,delay=3):
         command = self.robots_command.command.add()   
         command.robot_id = index
         command.velocity_x = vx
@@ -25,6 +25,8 @@ class Cmd:
         #print(self.commands) #Debug info
         client = socket.socket(type=socket.SOCK_DGRAM)
         send_data  = commands_str
-        while True:
-            client.sendto(send_data,(self.ip,self.port))
+        client.sendto(send_data,(self.ip,self.port))
         client.close()
+
+    def newCommand(self):
+        self.robots_command = zss_cmd_pb2.Robots_Command()

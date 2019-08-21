@@ -1,7 +1,9 @@
 import numpy as np
+import time
 try:
     from protobuf_shader.Dbg import Dbg
-    from protobuf_shader.Rcv import Rcv     
+    from protobuf_shader.Rcv import Rcv 
+    from protobuf_shader.Cmd import Cmd    
     from rrt.rrt import PyRRT   
 except ImportError:
     raise
@@ -20,24 +22,17 @@ except ImportError:
     #cmd.addcommand(2,3,3,3)
     #print(cmd.robots_command) #Debug info
     #cmd.sendcommands()
-#try:
-#    from protobuf_shader.Cmd import Cmd
-#except ImportError:
-#    raise
-
-# create a debug list and send it
-
 
 def getLocation(rcv):
     location = np.arange(30,dtype=np.float64)
     #control yellow 0
     for i in range(8):
-        location[2*i]=rcv.robots_blue[i].x/10
-        location[2*i+1]=rcv.robots_blue[i].y/10
+        location[2*i]=rcv.robots_yellow[i].x/10
+        location[2*i+1]=rcv.robots_yellow[i].y/10
     for i in range(1,8):
         #print(i) #Debug info
-        location[2*(i+7)]=rcv.robots_yellow[i].x/10
-        location[2*(i+7)+1]=rcv.robots_yellow[i].y/10
+        location[2*(i+7)]=rcv.robots_blue[i].x/10
+        location[2*(i+7)+1]=rcv.robots_blue[i].y/10
 ##    for i in range(15):
         #print(i)
         #location[2*i]=10*(i+1)
@@ -47,15 +42,16 @@ def getLocation(rcv):
 def rrtInit(rcv):
     _locationList = getLocation(rcv)
     print(_locationList)
-    startpointx = -200
-    startpointy = -200
+    startpointx = rcv.robots_blue[0].x/10
+    startpointy = rcv.robots_blue[0].y/10
     goalpointx = 200
     goalpointy = 200
     stepsize = 40
     disTh = 20
     maxAttempts = 10000
+    radius = 400
     #print(np.NaN)
-    rrt_obj = PyRRT(startpointx,startpointy,goalpointx,goalpointy,_locationList,stepsize,disTh,maxAttempts)
+    rrt_obj = PyRRT(startpointx,startpointy,goalpointx,goalpointy,_locationList,stepsize,disTh,maxAttempts,radius)
     return rrt_obj
 
 def getTestPath(MAXPOINT):
@@ -71,11 +67,84 @@ def getTestPath(MAXPOINT):
     print(path)
     return path
 
-def getPath(MAXPOINT,rcv):
-    path = np.ones(MAXPOINT, dtype=np.float64 ) * np.NaN    
+def getTestCommand(MAXPOINT):
+    pass
+
+def getCommand(MAXPOINT,rrt_obj,cmd):
+    leng_time = np.ones(MAXPOINT, dtype=np.float64 ) * np.NaN
+    theta_time = np.ones(MAXPOINT, dtype=np.float64 ) * np.NaN
+    leng = np.ones(MAXPOINT, dtype=np.float64 ) * np.NaN
+    theta = np.ones(MAXPOINT, dtype=np.float64 ) * np.NaN
+
+    rrt_obj.get_rrt_time(leng_time,theta_time)
+    rrt_obj.get_rrt_length(leng)
+    rrt_obj.get_rrt_theta(theta)
+
+    print("leng_time:",leng_time)
+    print("theta_time:",theta_time)
+    print("leng:",leng)
+    print("theta:",theta)
+
+    index = 0
+    cmd.addcommand(omega=0)
+    cmd.sendcommands()
+    time.sleep(leng_time[index])
+    cmd.newCommand()
+    while not np.isnan(theta_time)[index]:
+        if theta_time[index]<0:
+            cmd.addcommand(vx=0,omega=-0.1)
+            cmd.sendcommands() 
+            time.sleep(-theta_time[index])
+        else:
+            cmd.addcommand(vx=0,omega=0.1)
+            cmd.sendcommands() 
+            time.sleep(theta_time[index])
+        cmd.newCommand()
+        cmd.addcommand(omega=0)
+        cmd.sendcommands()
+        time.sleep(leng_time[index+1])
+        cmd.newCommand()
+
+        
+
+def buildRRT(MAXPOINT,rcv):
+    path = np.ones(MAXPOINT, dtype=np.float64 ) * np.NaN 
     rrt_obj = rrtInit(rcv)
     rrt_obj.get_path(path)
-    return path
+    return rrt_obj,path
+
+def drawTree(pone,ptwo,pthree,pfour,dbg):
+    index = 0;
+    while not np.isnan(pone)[index]:
+        beginPoint = dbg.Point(pone[index],ptwo[index])
+        endPoint = dbg.Point(pthree[index],pfour[index])
+        PointList = set()
+        PointList.add(beginPoint)
+        PointList.add(endPoint)
+        dbg.drawpoints(PointList)  
+        dbg.drawline(beginPoint,endPoint)
+        #print(dbg.msglist) #Debug
+        dbg.sendmsgs()
+        #dbg.newmsgs()
+        index=index+1
+    dbg.newmsgs()
+
+def rrt_debug(MAXPOINT,rrt_obj,dbg):    
+    pone = np.ones(MAXPOINT, dtype=np.float64 ) * np.NaN
+    ptwo = np.ones(MAXPOINT, dtype=np.float64 ) * np.NaN
+    pthree = np.ones(MAXPOINT, dtype=np.float64 ) * np.NaN
+    pfour = np.ones(MAXPOINT, dtype=np.float64 ) * np.NaN
+
+    rrt_obj.get_rrt(pone,ptwo,pthree,pfour)
+
+    #print("pone:",pone)
+    #print("ptwo:",ptwo)
+    #print("pthree:",pthree)
+    #print("pfour:",pfour)
+
+    #print(np.isnan(pone)[40])
+    drawTree(pone,ptwo,pthree,pfour,dbg)
+
 
 def drawpath(dbg,path):
     index = 0
@@ -85,22 +154,26 @@ def drawpath(dbg,path):
         newPoint = dbg.Point(path[index],path[index+1])
         PointList.add(newPoint)
         if index>0 :
-            dbg.drawline(lastPoint,newPoint)
+            dbg.drawline(lastPoint,newPoint,False,7)
         lastPoint= newPoint
-        index= index +2
+        index = index +2
     
     dbg.drawpoints(PointList)  
-    print(dbg.msglist) #Debug
+    #print(dbg.msglist) #Debug
     dbg.sendmsgs()
-
-
+    #dbg.newmsgs()
 
 def main():
     ip = "127.0.0.1"    
-    MAXPOINT = 100
+    MAXPOINT = 20
 # receive from the port
     rcvport = 23333
     rcv = Rcv(rcvport,ip)
+
+# draw some debugs
+    dbgport = 20001
+    dbg = Dbg(dbgport,ip)
+
     _locationList = getLocation(rcv)
     #print(_locationList)
     #print(rcv.robots_yellow[1].x) #Debug info 
@@ -108,22 +181,20 @@ def main():
 
 # get the path
     #path=getTestPath(MAXPOINT)
-    path=getPath(MAXPOINT,rcv)
+    rrt_obj,path=buildRRT(MAXPOINT,rcv)
+    drawpath(dbg,path)
+    #rrt_debug(MAXPOINT,rrt_obj,dbg)
     #print(path)
     
 
 # send a command
-    #cmdport = 50001
-    #cmd = Cmd(cmdport,ip)
+    cmdport = 50001
+    cmd = Cmd(cmdport,ip)
+    getCommand(MAXPOINT,rrt_obj,cmd)
     #cmd.addcommand()
     #cmd.addcommand(2,3,3,3)
     #print(cmd.robots_command) #Debug info
     #cmd.sendcommands()
-
-# draw some debugs
-    dbgport = 20001
-    dbg = Dbg(dbgport,ip)
-    drawpath(dbg,path)
 
 
     #Point = dbg.Point(3,3) # 3 is alternative number
