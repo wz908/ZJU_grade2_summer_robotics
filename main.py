@@ -1,10 +1,12 @@
 import numpy as np
 import time
+import sys
+
 try:
     from protobuf_shader.Dbg import Dbg
     from protobuf_shader.Rcv import Rcv 
     from protobuf_shader.Cmd import Cmd    
-    from rrt.rrt import PyRRT   
+    from rrt.rrt import PyRRT
 except ImportError:
     raise
 #    get the image and parse it whenever the object is created by its port and ip
@@ -22,22 +24,6 @@ except ImportError:
     #cmd.addcommand(2,3,3,3)
     #print(cmd.robots_command) #Debug info
     #cmd.sendcommands()
-
-def getLocation(rcv):
-    location = np.arange(30,dtype=np.float64)
-    #control yellow 0
-    for i in range(8):
-        location[2*i]=rcv.robots_yellow[i].x/10
-        location[2*i+1]=rcv.robots_yellow[i].y/10
-    for i in range(1,8):
-        #print(i) #Debug info
-        location[2*(i+7)]=rcv.robots_blue[i].x/10
-        location[2*(i+7)+1]=rcv.robots_blue[i].y/10
-##    for i in range(15):
-        #print(i)
-        #location[2*i]=10*(i+1)
-        #location[2*i+1]=10*(i+1)
-    return location
 
 def rrtInit(rcv):
     _locationList = getLocation(rcv)
@@ -113,21 +99,6 @@ def buildRRT(MAXPOINT,rcv):
     rrt_obj.get_path(path)
     return rrt_obj,path
 
-def drawTree(pone,ptwo,pthree,pfour,dbg):
-    index = 0;
-    while not np.isnan(pone)[index]:
-        beginPoint = dbg.Point(pone[index],ptwo[index])
-        endPoint = dbg.Point(pthree[index],pfour[index])
-        PointList = set()
-        PointList.add(beginPoint)
-        PointList.add(endPoint)
-        dbg.drawpoints(PointList)  
-        dbg.drawline(beginPoint,endPoint)
-        #print(dbg.msglist) #Debug
-        dbg.sendmsgs()
-        #dbg.newmsgs()
-        index=index+1
-    dbg.newmsgs()
 
 def rrt_debug(MAXPOINT,rrt_obj,dbg):    
     pone = np.ones(MAXPOINT, dtype=np.float64 ) * np.NaN
@@ -163,34 +134,56 @@ def drawpath(dbg,path):
     dbg.sendmsgs()
     #dbg.newmsgs()
 
+
 def main():
+    #print ("clock1:{}".format(time.process_time()))
     ip = "127.0.0.1"    
     MAXPOINT = 20
 # receive from the port
     rcvport = 23333
     rcv = Rcv(rcvport,ip)
+    print(rcv.me)
+    obstacleList = rcv.getLocation()
+    print(rcv.myposx)
+    #print ("clock2:{}".format(time.process_time()))
+    #print(len(rcv.robots_yellow))
 
 # draw some debugs
-    dbgport = 20001
-    dbg = Dbg(dbgport,ip)
-
-    _locationList = getLocation(rcv)
+    #dbgport = 20001
+    #dbg = Dbg(dbgport,ip)
+    #print ("clock2:{}".format(time.process_time()))
+    #_locationList = getLocation(rcv)
+    #print ("clock3:{}".format(time.process_time()))
     #print(_locationList)
     #print(rcv.robots_yellow[1].x) #Debug info 
     #print(type(rcv.robots_yellow))
 
 # get the path
     #path=getTestPath(MAXPOINT)
-    rrt_obj,path=buildRRT(MAXPOINT,rcv)
-    drawpath(dbg,path)
+    #rrt_obj,path=buildRRT(MAXPOINT,rcv)
+    #print ("clock4:{}".format(time.clock()))
+    #drawpath(dbg,path)
+    #print ("clock5:{}".format(time.clock()))
     #rrt_debug(MAXPOINT,rrt_obj,dbg)
     #print(path)
-    
+    #startpointx = rcv.robots_blue[0].x/10
+    #startpointy = rcv.robots_blue[0].y/10
+    #index = 0
+    #ax = []
+    #ay = []
+    #while not np.isnan(path)[index]:
+    #    ax.insert(0,path[index])
+    #    ay.insert(0,path[index+1])
+    #    index = index+2
 
+
+    
 # send a command
-    cmdport = 50001
-    cmd = Cmd(cmdport,ip)
-    getCommand(MAXPOINT,rrt_obj,cmd)
+    #cmdport = 50001
+    #cmd = Cmd(cmdport,ip)
+
+
+    #getCommand(MAXPOINT,rrt_obj,cmd)
     #cmd.addcommand()
     #cmd.addcommand(2,3,3,3)
     #print(cmd.robots_command) #Debug info

@@ -90,3 +90,19 @@ class Dbg:
 
     def newmsgs(self):
         self.msglist = debug.Debug_Msgs()
+
+    def drawTree(pone,ptwo,pthree,pfour,dbg):
+        index = 0;
+        while not np.isnan(pone)[index]:
+            beginPoint = dbg.Point(pone[index],ptwo[index])
+            endPoint = dbg.Point(pthree[index],pfour[index])
+            PointList = set()
+            PointList.add(beginPoint)
+            PointList.add(endPoint)
+            dbg.drawpoints(PointList)  
+            dbg.drawline(beginPoint,endPoint)
+            #print(dbg.msglist) #Debug
+            dbg.sendmsgs()
+            #dbg.newmsgs()
+            index=index+1
+        dbg.newmsgs()
