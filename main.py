@@ -1,12 +1,14 @@
 import numpy as np
 import time
 import sys
+import math
 
 try:
     from protobuf_shader.Dbg import Dbg
     from protobuf_shader.Rcv import Rcv 
     from protobuf_shader.Cmd import Cmd    
     from rrt.rrt import PyRRT
+    from motion.Pymotion import PyMOTION
 except ImportError:
     raise
 #    get the image and parse it whenever the object is created by its port and ip
@@ -25,9 +27,27 @@ except ImportError:
     #print(cmd.robots_command) #Debug info
     #cmd.sendcommands()
 
+def motionInit(path,rcv,theta,velocity):
+    reallocation_x = rcv.myposx
+    reallocation_y = rcv.myposy
+
+    #print('reallocation:{},{}'.format(reallocation_x,reallocation_y))
+    orientation = theta
+    sampling_time = 0.3
+    set_v_x = velocity*math.cos(theta)
+    set_v_y = velocity*math.sin(theta)
+    #print('orientation:{}'.format(orientation))
+    begin_x = path[-2]
+    begin_y = path[-1]
+    #print(path)
+    #print('beginpoint:{},{}'.format(begin_x,begin_y))
+    motion_obj = PyMOTION(reallocation_x,reallocation_y,orientation,path,sampling_time,set_v_x,set_v_y,begin_x,begin_y)
+    #print('the motion class is initialized!')
+    return motion_obj
+
 def rrtInit(rcv):
-    _locationList = getLocation(rcv)
-    print(_locationList)
+    _locationList = rcv.getLocation()
+    #print(_locationList)
     startpointx = rcv.robots_blue[0].x/10
     startpointy = rcv.robots_blue[0].y/10
     goalpointx = 200
@@ -96,7 +116,9 @@ def getCommand(MAXPOINT,rrt_obj,cmd):
 def buildRRT(MAXPOINT,rcv):
     path = np.ones(MAXPOINT, dtype=np.float64 ) * np.NaN 
     rrt_obj = rrtInit(rcv)
+    #print("rrt_obj initialzed")
     rrt_obj.get_path(path)
+    path = np.delete(path,np.where(np.isnan(path))[0],0) #delete the nan values in numpy list 
     return rrt_obj,path
 
 
@@ -121,7 +143,7 @@ def drawpath(dbg,path):
     index = 0
     PointList = set()
     #print(np.isnan(path)[0])
-    while not np.isnan(path)[index]:
+    while index < len(path):
         newPoint = dbg.Point(path[index],path[index+1])
         PointList.add(newPoint)
         if index>0 :
@@ -141,28 +163,29 @@ def main():
     MAXPOINT = 20
 # receive from the port
     rcvport = 23333
+    dbgport = 20001
+    dbg = Dbg(dbgport,ip) 
+    print ("clock2:{}".format(time.process_time_ns()))
     rcv = Rcv(rcvport,ip)
-    print(rcv.me)
-    obstacleList = rcv.getLocation()
-    print(rcv.myposx)
-    #print ("clock2:{}".format(time.process_time()))
+    cmdport = 50001
+    cmd = Cmd(cmdport,ip)
+    #print(rcv.me)
+    #obstacleList = rcv.getLocation()
+    #print(rcv.myposx)
     #print(len(rcv.robots_yellow))
 
 # draw some debugs
-    #dbgport = 20001
-    #dbg = Dbg(dbgport,ip)
     #print ("clock2:{}".format(time.process_time()))
-    #_locationList = getLocation(rcv)
-    #print ("clock3:{}".format(time.process_time()))
     #print(_locationList)
     #print(rcv.robots_yellow[1].x) #Debug info 
     #print(type(rcv.robots_yellow))
 
 # get the path
     #path=getTestPath(MAXPOINT)
-    #rrt_obj,path=buildRRT(MAXPOINT,rcv)
-    #print ("clock4:{}".format(time.clock()))
-    #drawpath(dbg,path)
+    print ("clock3:{}".format(time.process_time_ns()))
+    rrt_obj,path=buildRRT(MAXPOINT,rcv)
+    print ("clock4:{}".format(time.process_time_ns()))
+    drawpath(dbg,path)
     #print ("clock5:{}".format(time.clock()))
     #rrt_debug(MAXPOINT,rrt_obj,dbg)
     #print(path)
@@ -176,11 +199,18 @@ def main():
     #    ay.insert(0,path[index+1])
     #    index = index+2
 
-
-    
+    velocity = 50
+    theta = np.ones(MAXPOINT, dtype=np.float64 ) * np.NaN
+    rrt_obj.get_rrt_theta(theta)
+    print ("clock5:{}".format(time.process_time_ns())) 
+    motion_obj = motionInit(path,rcv,theta[0],velocity)
+    motion_obj.get_motion()
+    print ("clock6:{}".format(time.process_time_ns())) 
+    print("vx:{}".format(motion_obj.updated_vx()))
+    print("vy:{}".format(motion_obj.updated_vy()))  
+    print("omega:{}".format(motion_obj.updated_omega())) 
 # send a command
-    #cmdport = 50001
-    #cmd = Cmd(cmdport,ip)
+
 
 
     #getCommand(MAXPOINT,rrt_obj,cmd)

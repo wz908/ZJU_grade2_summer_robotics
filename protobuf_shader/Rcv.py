@@ -8,13 +8,14 @@ class Rcv:
         Rcv.port = port
         Rcv.ip = ip
         self.server = self.buildConnection()
-        self.data,self.address = self.server.recvfrom(10240) 
+        self.update()
         self.parseWithProto()
         self.me = [0,'b']
         self.obj = []
         self.myposx = 500
         self.myposy = 500
-          
+    def update(self):
+        self.data,self.address = self.server.recvfrom(10240) 
     def buildConnection(self):
         try:
             server = socket.socket(type=socket.SOCK_DGRAM)
@@ -36,6 +37,7 @@ class Rcv:
         self.robots_blue = detection_proto.robots_blue 
 
     def getLocation(self):
+        self.obj = []
         location = np.ones(32,dtype=np.float64)*np.NaN
         #control yellow 0
         for i in range(len(self.robots_yellow)):
@@ -57,7 +59,7 @@ class Rcv:
                 location[2*(i+len(self.robots_yellow))]=self.robots_blue[i].x/10
                 location[2*(i+len(self.robots_yellow))+1]=self.robots_blue[i].y/10
 
-        print("{} objects detected!".format(len(self.obj)))
+        #print("{} objects detected!".format(len(self.obj)))
         location = np.delete(location,np.where(np.isnan(location))[0],0) #delete the nan values in numpy list 
         self.checkMyPos()
         ##    for i in range(15):
@@ -68,7 +70,7 @@ class Rcv:
 
     def checkMyPos(self):
         if self.me in self.obj:
-            print("I am here!")
+            #print("I am here!")
             return True
         else:
             print("I'm out!")
@@ -81,5 +83,3 @@ class Rcv:
 #    data,address = server.recvfrom(10240)
 #    detection_ball_proto = vision_detection_pb2.Vision_DetectionBall()
 # detection_ball_proto.ParseFromString(data)
-
-
