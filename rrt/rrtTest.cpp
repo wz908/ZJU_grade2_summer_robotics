@@ -23,7 +23,7 @@ RRT::RRT(double startpointx, double startpointy, double goalpointx,double goalpo
 	this->disTh = disTh;
 	this->maxFailedAttempts = attempts;
 	this->radius = radius;
-	//cout<<"the class is initialized"<<endl;
+	cout<<"the class is initialized"<<endl;
 }
 
 double RRT::distance(point p1, point p2) {return sqrt((p1.x - p2.x)*(p1.x - p2.x) + (p1.y - p2.y)*(p1.y - p2.y));}
@@ -329,40 +329,37 @@ double*  RRT::FindPath(double the_path[]) {
 		num++;
 	}
 
-	double* points = (double*)malloc(2*num * sizeof(double));
 	pt2 = rrt2.begin();
 	
 	for (int i = 0; i < 2 * num; i++) {
 		if (i % 2 == 0) {
-			points[i] = pt2->p.x;
-			the_path[i] = points[i];
+			the_path[i]  = pt2->p.x;
 		}
 		if (i % 2 == 1) {
-			points[i] = pt2->p.y;
-			the_path[i] = points[i]; 
+			the_path[i] = pt2->p.y;
 			pt2++;
 		}
 	}
 
 	double tem1, tem2;
 	for (int i = 0; i < num/2; i++) {
-		tem1 = points[2 * i];
-		points[2 * i] = points[2 * (num - 1 - i) ];
-		points[2 * (num - 1 - i) ] = tem1;
-		tem2 = points[2 * i+1];
-		points[2 * i+1] = points[2 * (num - 1 - i)+1 ];
-		points[2 * (num - 1 - i)+1 ] = tem2;
+		tem1 = the_path[2 * i];
+		the_path[2 * i] = the_path[2 * (num - 1 - i) ];
+		the_path[2 * (num - 1 - i) ] = tem1;
+		tem2 = the_path[2 * i+1];
+		the_path[2 * i+1] = the_path[2 * (num - 1 - i)+1 ];
+		the_path[2 * (num - 1 - i)+1 ] = tem2;
 	}
 
 
 	pathlength = num;
-	this->path = points;
+	this->path = the_path;
 	this->p1 = ptr1;
 	this->p2 = ptr2;
 	this->p3 = ptr3;
 	this->p4 = ptr4;
 	this->rrt_count = counter;
-	return points;
+	return the_path;
 }
 
 }

@@ -37,7 +37,7 @@ class Rcv:
         #print(self.robots_yellow[1].x) #Debug info
         self.robots_blue = detection_proto.robots_blue 
 
-    def getLocation(self):
+    def getAllState(self):
         self.obj = []
         location = np.ones(32,dtype=np.float64)*np.NaN
         #control yellow 0
@@ -46,6 +46,7 @@ class Rcv:
             if self.me == [self.robots_yellow[i].robot_id,'y']:
                 self.myposx = self.robots_yellow[i].x/10 # [cm]
                 self.myposy = self.robots_yellow[i].y/10 # [cm]
+                self.mybot = self.robots_yellow[i]
             else:
                 location[2*i]=self.robots_yellow[i].x/10
                 location[2*i+1]=self.robots_yellow[i].y/10
@@ -56,18 +57,18 @@ class Rcv:
             if self.me == [self.robots_blue[i].robot_id,'b']:
                 self.myposx = self.robots_blue[i].x/10 # [cm]
                 self.myposy = self.robots_blue[i].y/10 # [cm]
+                self.mybot = self.robots_blue[i]
             else:    
                 location[2*(i+len(self.robots_yellow))]=self.robots_blue[i].x/10
                 location[2*(i+len(self.robots_yellow))+1]=self.robots_blue[i].y/10
 
         #print("{} objects detected!".format(len(self.obj)))
-        location = np.delete(location,np.where(np.isnan(location))[0],0) #delete the nan values in numpy list 
-        self.checkMyPos()
+        self.obstacleList = np.delete(location,np.where(np.isnan(location))[0],0) #delete the nan values in numpy list 
+        return self.checkMyPos()
         ##    for i in range(15):
             #print(i)
             #location[2*i]=10*(i+1)
             #location[2*i+1]=10*(i+1)
-        return location
 
     def checkMyPos(self):
         if self.me in self.obj:
@@ -76,11 +77,22 @@ class Rcv:
         else:
             print("I'm out!")
             return False
-
-    def getMyPos(self):
-        if self.checkMyPos():
-            return 
 #while True:
 #    data,address = server.recvfrom(10240)
 #    detection_ball_proto = vision_detection_pb2.Vision_DetectionBall()
 # detection_ball_proto.ParseFromString(data)
+    def getMyState(self):
+        if self.me[1]=='y':
+            self.myposx = self.robots_yellow[self.me[0]].x/10 # [cm]
+            self.myposy = self.robots_yellow[self.me[0]].y/10 # [cm]
+            self.mybot = self.robots_yellow[self.me[0]]
+
+        elif self.me[1]=='b':
+            self.myposx = self.robots_blue[self.me[0]].x/10 # [cm]
+            self.myposy = self.robots_blue[self.me[0]].y/10 # [cm]
+            self.mybot = self.robots_blue[self.me[0]]
+
+        else:
+            print("cannot get my state")
+
+

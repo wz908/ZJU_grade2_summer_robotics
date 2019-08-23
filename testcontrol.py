@@ -27,9 +27,10 @@ locationy = []
 predlist = []
 errx = []
 erry = []
+erro = []
 
 rcv.update()
-rcv.getLocation()
+rcv.getAllState()
 startpx = rcv.myposx
 startpy = rcv.myposy
 starttime = time.process_time()
@@ -46,9 +47,11 @@ targetvy = targetv*math.sin(theta)
 #print(targetvx,targetvy)
 
 k = 20
+k2 = 20
 # an important number
+omega = 0
 while (nowtime-starttime)<1 :    
-    cmd.addcommand(0,0,cmdvy,0)
+    cmd.addcommand(0,0,targetvy,omega)
     nowtime = time.process_time()
     duration = nowtime - starttime
     cmd.sendcommands() 
@@ -57,13 +60,15 @@ while (nowtime-starttime)<1 :
         #predictx = startpx + duration*targetvx
         predicty = startpy + duration*targetvy
         #print(nowtime)
-        rcv.getLocation()
+        rcv.getMyState()
         #locationx.append(rcv.myposx)
         locationy.append(rcv.myposy)
         #errx.append(predictx-rcv.myposx)
         erry.append(predicty-rcv.myposy)
         #cmdvx = cmdvx+k*(predictx-rcv.myposx) 
-        cmdvy = cmdvy+k*(predicty-rcv.myposy)  
+        cmdvy = cmdvy+k*(predicty-rcv.myposy) 
+        erro.append(rcv.mybot.orientation)
+        omega = -k*rcv.mybot.orientation
         samptime += 0.01
 
 cmd.addcommand(0,0,0,0)  
@@ -71,14 +76,16 @@ cmd.sendcommands()
 nowtime = time.process_time()            
 rcv.update()
 #print(nowtime)
-rcv.getLocation()
+rcv.getMyState()
 #locationx.append(rcv.myposx)
 locationy.append(rcv.myposy)
 
+print("erro",erro)
+print("erry",erry)
 #print(locationx[0])
 #print(locationx[-1])
-#print(locationy[0])
-#print(locationy[-1])
+print(locationy[0])
+print(locationy[-1])
 #print("errx:",errx)
 #print("erry:",erry)
 

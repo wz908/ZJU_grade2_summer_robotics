@@ -18,3 +18,11 @@ cmd = Cmd(cmdport,ip)
 rcvport = 23333
 rcv = Rcv(rcvport,ip)
 
+starttime = time.process_time()
+while True:
+    cmd.addcommand(0,0,-100,0)
+    cmd.sendcommands() 
+    if time.process_time()-starttime>5:
+        break
+cmd.addcommand(0,0,0,0)
+cmd.sendcommands()
