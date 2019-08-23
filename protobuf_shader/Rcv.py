@@ -15,15 +15,16 @@ class Rcv:
         self.myposx = 500
         self.myposy = 500
     def update(self):
-        self.data,self.address = self.server.recvfrom(10240) 
+        self.data,self.address = self.server.recvfrom(10240)
+        self.parseWithProto()
+    
     def buildConnection(self):
         try:
             server = socket.socket(type=socket.SOCK_DGRAM)
             server.bind((self.ip,self.port))
-            print('the server has open port {}'.format(self.port))
+            #print('the server has open port {}'.format(self.port))
         except :
             print("the connection can't be set")
-
         return server
     
     # Analyse the data

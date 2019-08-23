@@ -9,7 +9,7 @@ class Cmd:
         self.port=port
         self.ip = ip
         
-    def addcommand(self,index=0, vx=50, vy=0, omega=0.1, kick=0,power=60,spin=0,delay=3):
+    def addcommand(self,index=0, vx=0, vy=0, omega=0, kick=0,power=60,spin=0,delay=3):
         command = self.robots_command.command.add()   
         command.robot_id = index
         command.velocity_x = vx

@@ -1,13 +1,17 @@
 ﻿#include <iostream>
 #include "rrtTest.h"
+#include <cmath>
 using namespace std;
 using namespace myrrt;
+
+#define MAX 300
 int main()
 {
     double locationList[] = {10,10,20,20,30,30,170,200,50,50,60,60,70,70,80,80,90,90,100,100,110,110,120,120,130,130,140,140,100,200}; 
     RRT myrrt(-200,200,200,200,locationList,40,20,10000,600);
-	
-    std::cout<<myrrt.FindPath()[0]<<std::endl;
+	double path[MAX];
+	myrrt.FindPath(path);
+    std::cout<<path[0]<<std::endl;
 	
 	std::cout << myrrt.pathlength << std::endl;
 	double* length = (double*)malloc((myrrt.pathlength-1) * sizeof(double));
